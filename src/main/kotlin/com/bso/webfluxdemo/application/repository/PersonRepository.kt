@@ -1,6 +1,6 @@
-package com.bso.webfluxdemo.infra.database
+package com.bso.webfluxdemo.application.repository
 
-import com.bso.webfluxdemo.domain.entity.Person
+import com.bso.webfluxdemo.application.domain.entity.Person
 import org.springframework.data.r2dbc.repository.R2dbcRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID

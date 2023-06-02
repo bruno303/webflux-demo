@@ -1,4 +1,4 @@
-package com.bso.webfluxdemo.service
+package com.bso.webfluxdemo.application.service
 
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono

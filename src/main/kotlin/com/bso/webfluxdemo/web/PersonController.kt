@@ -1,10 +1,8 @@
 package com.bso.webfluxdemo.web
 
-import com.bso.webfluxdemo.domain.entity.Person
-import com.bso.webfluxdemo.infra.database.PersonRepository
-import com.bso.webfluxdemo.service.CustomFlowProcessor
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactor.awaitSingle
+import com.bso.webfluxdemo.application.domain.entity.Person
+import com.bso.webfluxdemo.application.repository.PersonRepository
+import com.bso.webfluxdemo.application.service.CustomFlowProcessor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional

@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:person;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  r2dbc:
+    initialization-mode: always
+  redis:
+    redisson:
+      config: |
+        singleServerConfig:
+          timeout: 3000
+          retryAttempts: 3
+          retryInterval: 1500
+          address: "${REDIS_URL:redis://127.0.0.1}:6379"
+        threads: 16
+        nettyThreads: 32
+        transportMode: "NIO"
+        minCleanUpDelay: 5
+        maxCleanUpDelay: 30
+
+app:
+  lock:
+    waitTimeSeconds: 10
+    leaseTimeSeconds: 60

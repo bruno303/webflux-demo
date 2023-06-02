@@ -1,4 +1,4 @@
-package com.bso.webfluxdemo.domain.entity
+package com.bso.webfluxdemo.application.domain.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

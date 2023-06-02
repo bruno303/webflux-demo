@@ -1,7 +1,8 @@
-package com.bso.webfluxdemo.service
+package com.bso.webfluxdemo.application.service
 
-import com.bso.webfluxdemo.domain.entity.Person
-import com.bso.webfluxdemo.infra.database.PersonRepository
+import com.bso.webfluxdemo.application.domain.entity.Person
+import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.application.repository.PersonRepository
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,9 +15,11 @@ import java.util.*
 @Service
 class CustomFlowProcessor(
     private val personRepository: PersonRepository,
-    private val externalService: ExternalService
+    private val externalService: ExternalService,
+    private val lockManager: LockManager
 ) {
     private val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
+//    private val uuidTest = UUID.randomUUID()
 
     @Transactional
     operator fun invoke() : Mono<Person> {
@@ -26,11 +29,15 @@ class CustomFlowProcessor(
             birthDate = LocalDate.of(1995, 12, 1)
         )
 
-        return externalService.getExternalIdFromExternalService()
-            .flatMap { Mono.just(person.copy(externalId = it)) }
-            .flatMap { personRepository.save(it) }
-            .doOnNext { logger.info("Person created: {}", it) }
-            .doOnNext { throw IllegalStateException("Teste") }
+        return lockManager.runWithLock(person.id.toString()) {
+            externalService.getExternalIdFromExternalService()
+                .map { person.copy(externalId = it) }
+                .flatMap {
+                    personRepository.save(it)
+//                        .also { throw IllegalStateException("Error test") }
+                }
+                .doOnNext { logger.info("Person created: {}", it) }
+        }
     }
 
     @Transactional
@@ -47,10 +54,9 @@ class CustomFlowProcessor(
 
 
 
-        return personRepository.save(person).awaitSingle().let {
+        return personRepository.save(person).awaitSingle().also {
             logger.info("Person created: {}", it)
-            throw IllegalStateException("Teste")
-            it
+//            throw IllegalStateException("Teste")
         }
     }
 }
