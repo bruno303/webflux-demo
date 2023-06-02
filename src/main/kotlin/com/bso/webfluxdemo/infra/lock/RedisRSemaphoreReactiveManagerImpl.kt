@@ -1,7 +1,6 @@
 package com.bso.webfluxdemo.infra.lock
 
 import com.bso.webfluxdemo.application.configuration.AppConfigurationProperties
-import com.bso.webfluxdemo.application.lock.Lock
 import com.bso.webfluxdemo.application.lock.LockManager
 import org.redisson.api.RPermitExpirableSemaphoreReactive
 import org.redisson.api.RedissonReactiveClient
@@ -25,54 +24,54 @@ class RedisRSemaphoreReactiveManagerImpl(
     }
 
     override fun <T : Any> runWithLock(key: String, action: () -> Mono<T>): Mono<T> {
-        logger.info("Locking key $key...")
         val semaphore = getSemaphore(key)
-        return semaphore
-            .expire(Duration.ofMinutes(1))
-            .then(semaphore.setPermits(1))
-            .then(
-                semaphore.lock()
-                    .switchIfEmpty {
-                        Mono.error(IllegalStateException("Can't acquire lock for key $key"))
-                    }
-            )
-            .flatMap { lockId: String -> execute(action, key, semaphore, lockId) }
+        return lock(semaphore, key)
+            .flatMap(executeAndRelease(action, key, semaphore))
     }
 
-    private fun RPermitExpirableSemaphoreReactive.lock() = this.tryAcquire(
+    private fun <T : Any> executeAndRelease(
+        action: () -> Mono<T>,
+        key: String,
+        semaphore: RPermitExpirableSemaphoreReactive
+    ) = { lockId: String ->
+        action()
+            .flatMap { result ->
+                logger.info("Unlocking key $key...")
+                semaphore.release(lockId).then(Mono.just(result))
+//            Mono.just(result)
+            }
+            .onErrorResume {
+                logger.info("Got some error. Unlocking key $key...")
+                semaphore.release(lockId).then(Mono.error(it))
+//            Mono.error(it)
+            }
+    }
+
+    private fun RPermitExpirableSemaphoreReactive.lock(): Mono<String> = this.tryAcquire(
         prop.lock.waitTimeSeconds.toLong(),
         prop.lock.leaseTimeSeconds.toLong(),
         TimeUnit.SECONDS
     )
 
-    fun lock(key: String): Mono<String> {
+    fun lock(semaphore: RPermitExpirableSemaphoreReactive, key: String): Mono<String> {
         logger.info("Locking key $key...")
-        val semaphore = getSemaphore(key)
         return semaphore
-            .expire(Duration.ofMinutes(1))
-            .then(semaphore.setPermits(1))
+            .setPermits(1)
             .then(
                 semaphore.lock()
+                    .flatMap { lockId -> setTtlAndReturn(semaphore, lockId) }
                     .switchIfEmpty {
                         Mono.error(IllegalStateException("Can't acquire lock for key $key"))
                     }
             )
     }
 
-    private fun <T : Any> execute(
-        action: () -> Mono<T>,
-        key: String,
+    private fun <T: Any> setTtlAndReturn(
         semaphore: RPermitExpirableSemaphoreReactive,
-        lockId: String
-    ) = action()
-        .flatMap { result ->
-            logger.info("Unlocking key $key...")
-            semaphore.release(lockId).then(Mono.just(result))
-        }
-        .onErrorResume {
-            logger.info("Got some error. Unlocking key $key...")
-            semaphore.release(lockId).then(Mono.error(it))
-        }
+        result: T
+    ): Mono<T> = semaphore
+        .expire(Duration.ofMinutes(1))
+        .then(Mono.just(result))
 
     @Synchronized
     private fun getSemaphore(key: String): RPermitExpirableSemaphoreReactive {
@@ -101,7 +100,7 @@ class RedisRSemaphoreReactiveManagerImpl(
                     semaphore.delete()
                         .flatMap { deleted ->
                             if (!deleted) {
-                                throw IllegalStateException("Could not delete semaphore for key: $key")
+                                Mono.error(IllegalStateException("Could not delete semaphore for key: $key"))
                             } else {
                                 logger.info("Semaphore for key $key deleted")
                                 Mono.empty()

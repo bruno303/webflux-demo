@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @Service
-class CustomFlowProcessor(
+class MyBusinessService(
     private val personRepository: PersonRepository,
     private val externalService: ExternalService,
     private val lockManager: LockManager
@@ -22,7 +22,7 @@ class CustomFlowProcessor(
 //    private val uuidTest = UUID.randomUUID()
 
     @Transactional
-    operator fun invoke() : Mono<Person> {
+    fun executeWithWebfluxStreams() : Mono<Person> {
         val person = Person(
             id = UUID.randomUUID(),
             name = "Person Xpto",
@@ -31,17 +31,17 @@ class CustomFlowProcessor(
 
         return lockManager.runWithLock(person.id.toString()) {
             externalService.getExternalIdFromExternalService()
+//                .flatMap { Mono.just(person.copy(externalId = it)) }
                 .map { person.copy(externalId = it) }
-                .flatMap {
-                    personRepository.save(it)
-//                        .also { throw IllegalStateException("Error test") }
-                }
+                .flatMap { personRepository.save(it) }
                 .doOnNext { logger.info("Person created: {}", it) }
         }
     }
 
+
+    // TODO - try implement some code using kotlin's Flow
     @Transactional
-    suspend fun execute(): Person {
+    suspend fun executeWithKotlinFlow(): Person {
         val person = Person(
             id = UUID.randomUUID(),
             name = "Person Xpto2",
@@ -51,8 +51,6 @@ class CustomFlowProcessor(
                 person.copy(externalId = it)
             }
         }
-
-
 
         return personRepository.save(person).awaitSingle().also {
             logger.info("Person created: {}", it)

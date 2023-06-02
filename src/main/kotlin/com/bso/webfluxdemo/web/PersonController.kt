@@ -2,7 +2,7 @@ package com.bso.webfluxdemo.web
 
 import com.bso.webfluxdemo.application.domain.entity.Person
 import com.bso.webfluxdemo.application.repository.PersonRepository
-import com.bso.webfluxdemo.application.service.CustomFlowProcessor
+import com.bso.webfluxdemo.application.service.MyBusinessService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("person")
 class PersonController(
-    private val customFlowProcessor: CustomFlowProcessor,
+    private val myBusinessService: MyBusinessService,
     private val personRepository: PersonRepository
 ) {
     private val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
@@ -24,13 +24,12 @@ class PersonController(
     @Transactional
     @PostMapping("random")
     fun createRandomPerson() : Mono<Person> {
-        return customFlowProcessor()
+        return myBusinessService.executeWithWebfluxStreams()
     }
-
 
     @PostMapping("random2")
     suspend fun createRandomPersonWithKotlin() : Person {
-        return customFlowProcessor.execute()
+        return myBusinessService.executeWithKotlinFlow()
     }
 
     @GetMapping

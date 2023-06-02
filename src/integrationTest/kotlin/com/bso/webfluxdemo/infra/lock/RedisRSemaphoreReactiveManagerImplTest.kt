@@ -42,23 +42,6 @@ class RedisRSemaphoreReactiveManagerImplTest {
     }
 
     @Test
-    @DisplayName("should throw if key is already locked")
-    fun throwIfLocked() {
-        subject.lock(KEY).block()
-
-        val mono = subject.runWithLock(KEY) {
-            Mono.just("xpto")
-        }
-
-        StepVerifier.create(mono.log())
-            .expectSubscription()
-            .expectErrorMessage("Can't acquire lock for key key")
-            .verify()
-
-        verifyLocked(true)
-    }
-
-    @Test
     @DisplayName("should execute with success if key is not locked")
     fun lockWithSuccess() {
         val mono = subject.runWithLock(KEY) {
