@@ -1,4 +1,4 @@
-package com.bso.webfluxdemo.infra.lock
+package com.bso.webfluxdemo.infra.lock.webflux
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

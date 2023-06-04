@@ -1,8 +1,8 @@
-package com.bso.webfluxdemo.infra.lock
+package com.bso.webfluxdemo.infra.lock.webflux
 
-import com.bso.webfluxdemo.infra.configuration.AppConfigurationProperties
-import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.application.lock.WebfluxLockManager
 import com.bso.webfluxdemo.crosscutting.log.logger
+import com.bso.webfluxdemo.infra.configuration.AppConfigurationProperties
 import org.redisson.api.RPermitExpirableSemaphoreReactive
 import org.redisson.api.RedissonReactiveClient
 import org.slf4j.Logger
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 class RedisRSemaphoreReactiveManagerImpl(
     private val prop: AppConfigurationProperties,
     private val redissonReactiveClient: RedissonReactiveClient
-) : LockManager {
+) : WebfluxLockManager {
     private val logger: Logger by logger()
 
     companion object {
