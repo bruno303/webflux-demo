@@ -2,19 +2,25 @@ package com.bso.webfluxdemo.infra.lock
 
 import com.bso.webfluxdemo.application.lock.Lock
 import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.crosscutting.log.logger
 import org.redisson.api.RLockReactive
 import org.redisson.api.RedissonReactiveClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
-//@Component
-// RLockReactive is reentrant. This is a probleam for reactive programming
+@Deprecated(
+    message = "Use RedisRSemaphoreReactiveManagerImpl instead",
+    replaceWith = ReplaceWith(
+        "RedisRSemaphoreReactiveManagerImpl",
+        "com.bso.webfluxdemo.infra.lock.RedisRSemaphoreReactiveManagerImpl"
+    ),
+    level = DeprecationLevel.ERROR
+)
 class RedisRLockReactiveManagerImpl(
     private val redissonReactiveClient: RedissonReactiveClient
 ) : LockManager {
-    private val logger: Logger by lazy { LoggerFactory.getLogger(RedisRLockReactiveManagerImpl::class.java) }
+    private val logger: Logger by logger()
 
     override fun <T : Any> runWithLock(key: String, action: () -> Mono<T>): Mono<T> {
         val lock = getLock(key)

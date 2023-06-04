@@ -1,11 +1,11 @@
 package com.bso.webfluxdemo.infra.lock
 
-import com.bso.webfluxdemo.application.configuration.AppConfigurationProperties
+import com.bso.webfluxdemo.infra.configuration.AppConfigurationProperties
 import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.crosscutting.log.logger
 import org.redisson.api.RPermitExpirableSemaphoreReactive
 import org.redisson.api.RedissonReactiveClient
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.switchIfEmpty
@@ -17,7 +17,7 @@ class RedisRSemaphoreReactiveManagerImpl(
     private val prop: AppConfigurationProperties,
     private val redissonReactiveClient: RedissonReactiveClient
 ) : LockManager {
-    private val logger: Logger by lazy { LoggerFactory.getLogger(RedisRSemaphoreReactiveManagerImpl::class.java) }
+    private val logger: Logger by logger()
 
     companion object {
         private const val LOCKS_HASH_NAME = "WEBFLUX_DEMO_LOCKS"

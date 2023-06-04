@@ -1,13 +1,9 @@
 package com.bso.webfluxdemo.application.domain.entity
 
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
 import java.time.LocalDate
 import java.util.*
 
-@Entity
 data class Person(
-    @Id
     val id: UUID,
     val name: String,
     val birthDate: LocalDate,

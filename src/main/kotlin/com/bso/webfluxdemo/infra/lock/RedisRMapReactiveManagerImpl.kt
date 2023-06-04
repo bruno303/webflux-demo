@@ -1,19 +1,25 @@
 package com.bso.webfluxdemo.infra.lock
 
-import com.bso.webfluxdemo.application.lock.Lock
 import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.crosscutting.log.logger
 import org.redisson.api.RMapReactive
 import org.redisson.api.RedissonReactiveClient
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import java.time.Duration
 
-//@Component
+@Deprecated(
+    message = "Use RedisRSemaphoreReactiveManagerImpl instead",
+    replaceWith = ReplaceWith(
+        "RedisRSemaphoreReactiveManagerImpl",
+        "com.bso.webfluxdemo.infra.lock.RedisRSemaphoreReactiveManagerImpl"
+    ),
+    level = DeprecationLevel.ERROR
+)
 class RedisRMapReactiveManagerImpl(
     private val redissonReactiveClient: RedissonReactiveClient
 ) : LockManager {
-    private val logger: Logger by lazy { LoggerFactory.getLogger(RedisRMapReactiveManagerImpl::class.java) }
+    private val logger: Logger by logger()
 
     companion object {
         private const val LOCKS_MAP_NAME = "WEBFLUX_DEMO_LOCKS"
