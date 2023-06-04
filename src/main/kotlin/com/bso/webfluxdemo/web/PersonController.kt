@@ -3,6 +3,8 @@ package com.bso.webfluxdemo.web
 import com.bso.webfluxdemo.application.domain.entity.Person
 import com.bso.webfluxdemo.application.repository.PersonRepository
 import com.bso.webfluxdemo.application.service.MyBusinessService
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +31,12 @@ class PersonController(
 
     @PostMapping("random2")
     suspend fun createRandomPersonWithKotlin() : Person {
+        return myBusinessService.executeWithKotlinSuspendFunctions()
+    }
+
+    @FlowPreview
+    @PostMapping("random3")
+    suspend fun createRandomPersonWithKotlinFlow() : Flow<Person> {
         return myBusinessService.executeWithKotlinFlow()
     }
 

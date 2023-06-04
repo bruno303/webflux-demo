@@ -1,6 +1,6 @@
-package com.bso.webfluxdemo.infra.lock
+package com.bso.webfluxdemo.infra.lock.webflux
 
-import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.application.lock.WebfluxLockManager
 import com.bso.webfluxdemo.crosscutting.log.logger
 import org.redisson.api.RMapReactive
 import org.redisson.api.RedissonReactiveClient
@@ -18,7 +18,7 @@ import java.time.Duration
 )
 class RedisRMapReactiveManagerImpl(
     private val redissonReactiveClient: RedissonReactiveClient
-) : LockManager {
+) : WebfluxLockManager {
     private val logger: Logger by logger()
 
     companion object {
@@ -67,9 +67,9 @@ class RedisRMapReactiveManagerImpl(
     override fun unlock(key: String): Mono<Void> {
         TODO("Not yet implemented")
     }
-}
 
-private enum class LockState {
-    LOCKED,
-    RELEASED
+    private enum class LockState {
+        LOCKED,
+        RELEASED
+    }
 }

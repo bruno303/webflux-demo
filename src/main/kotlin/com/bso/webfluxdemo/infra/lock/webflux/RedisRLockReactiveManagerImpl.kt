@@ -1,7 +1,7 @@
-package com.bso.webfluxdemo.infra.lock
+package com.bso.webfluxdemo.infra.lock.webflux
 
 import com.bso.webfluxdemo.application.lock.Lock
-import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.application.lock.WebfluxLockManager
 import com.bso.webfluxdemo.crosscutting.log.logger
 import org.redisson.api.RLockReactive
 import org.redisson.api.RedissonReactiveClient
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono
 )
 class RedisRLockReactiveManagerImpl(
     private val redissonReactiveClient: RedissonReactiveClient
-) : LockManager {
+) : WebfluxLockManager {
     private val logger: Logger by logger()
 
     override fun <T : Any> runWithLock(key: String, action: () -> Mono<T>): Mono<T> {

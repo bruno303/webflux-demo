@@ -1,8 +1,11 @@
 package com.bso.webfluxdemo.application.service
 
 import com.bso.webfluxdemo.application.domain.entity.Person
-import com.bso.webfluxdemo.application.lock.LockManager
+import com.bso.webfluxdemo.application.lock.WebfluxLockManager
 import com.bso.webfluxdemo.application.repository.PersonRepository
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,7 +19,7 @@ import java.util.UUID
 class MyBusinessService(
     private val personRepository: PersonRepository,
     private val externalService: ExternalService,
-    private val lockManager: LockManager
+    private val webfluxLockManager: WebfluxLockManager
 ) {
     private val logger: Logger by lazy { LoggerFactory.getLogger(this::class.java) }
 //    private val uuidTest = UUID.randomUUID()
@@ -29,7 +32,7 @@ class MyBusinessService(
             birthDate = LocalDate.of(1995, 12, 1)
         )
 
-        return lockManager.runWithLock(person.id.toString()) {
+        return webfluxLockManager.runWithLock(person.id.toString()) {
             externalService.getExternalIdFromExternalService()
 //                .flatMap { Mono.just(person.copy(externalId = it)) }
                 .map { person.copy(externalId = it) }
@@ -39,9 +42,8 @@ class MyBusinessService(
     }
 
 
-    // TODO - try implement some code using kotlin's Flow
     @Transactional
-    suspend fun executeWithKotlinFlow(): Person {
+    suspend fun executeWithKotlinSuspendFunctions(): Person {
         val person = Person(
             id = UUID.randomUUID(),
             name = "Person Xpto2",
@@ -57,4 +59,30 @@ class MyBusinessService(
 //            throw IllegalStateException("Teste")
         }
     }
+
+    @FlowPreview
+    @Transactional
+    suspend fun executeWithKotlinFlow(): Flow<Person> {
+        return Person(
+            id = UUID.randomUUID(),
+            name = "Person Xpto3",
+            birthDate = LocalDate.of(1995, 12, 1)
+        ).let { person ->
+            externalService.getExternalIdFromExternalService()
+                .asFlow()
+//                .flatMapConcat { person.withExternalId(it) }
+                .map { person.copy(externalId = it) }
+//                .flatMapConcat { savePerson(it) }
+                .flatMapMerge {
+                    savePerson(it)
+//                        .also { throw IllegalStateException("Teste") }
+                }
+                .onEach { logger.info("Person created: {}", it) }
+        }
+    }
+
+    private fun savePerson(person: Person): Flow<Person> = personRepository.save(person).asFlow()
+
+    private fun Person.withExternalId(externalId: String): Flow<Person> =
+        flowOf(this.copy(externalId = externalId))
 }
