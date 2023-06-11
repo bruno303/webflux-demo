@@ -3,6 +3,8 @@ package com.bso.webfluxdemo.web
 import com.bso.webfluxdemo.application.domain.entity.Person
 import com.bso.webfluxdemo.application.repository.PersonRepository
 import com.bso.webfluxdemo.application.service.MyBusinessService
+import com.bso.webfluxdemo.crosscutting.mono.getValue
+import com.bso.webfluxdemo.infra.web.filters.IdempotencyIdWebFilter.Companion.IDEMPOTENCY_HEADER
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +27,18 @@ class PersonController(
     @PostMapping("random")
     fun createRandomPerson() : Mono<Person> {
         return myBusinessService.executeWithWebfluxStreams()
+    }
+
+    @Transactional
+    @PostMapping("random/idempotency")
+    fun createRandomPersonWithIdempotencyId() : Mono<Person> {
+        return Mono.deferContextual { ctx ->
+            val idempotencyId: String? = ctx.getValue(IDEMPOTENCY_HEADER)
+            logger.info("Idempotency-Id is {}", idempotencyId)
+            // validate idempotency
+            myBusinessService.executeWithWebfluxStreams()
+                .contextWrite { it.put("key2", "value2") }
+        }
     }
 
     @PostMapping("random2")
